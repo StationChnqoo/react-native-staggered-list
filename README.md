@@ -1,6 +1,8 @@
 # react-native-staggered-list
 
-`react-native` 可以自己测量 Item 高度的瀑布流组件。
+`react-native` 可以自己测量 Item 高度的瀑布流组件。之所以起这个名字，是因为在 `Android` 开发中，官方的 `RecycleView` 有一个瀑布流的 `LayoutManager` 就叫 `Staggered`，因此有了 `StaggeredList`。
+
+因为这一段时间忙着上线，这个组件可能会更新比较慢，如果对你有了帮助，请点击一下右上角的 `Star`，当然如果有什么建议欢迎提 `issues` 和 `pr`。
 
 ## 命名规范
 
@@ -43,9 +45,11 @@
 
 - `ScrollView` 里面套 `VirtualList` 是否可行，今天下午试了一把感觉好像是不行，还是会有警告。
 
-- 性能：这个有时间接着优化，准备长期维护这个项目。
+- 性能:这个有时间接着优化，准备长期维护这个项目。
 
-- 下拉刷新：今天注意到 `ScrollView` 里面也有 `RefreshControl`，下个版本补充上。
+- 下拉刷新:今天注意到 `ScrollView` 里面也有 `RefreshControl`，下个版本补充上。
+
+- 打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。
 
 ## 版本更新记录
 
