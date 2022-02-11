@@ -1,0 +1,32 @@
+{
+  "name": "react-native-staggered-list",
+  "version": "1.0.0",
+  "description": "react-native ",
+  "main": "index.tsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChenqiaoStation/react-native-staggered-list.git"
+  },
+  "keywords": [
+    "react-native",
+    "mansory-layout",
+    "staggered-layout",
+    "waterfall-layout",
+    "react-native-mansory-list",
+    "react-native-waterfall"
+  ],
+  "author": "www.cctv3.net",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ChenqiaoStation/react-native-staggered-list/issues"
+  },
+  "homepage": "https://github.com/ChenqiaoStation/react-native-staggered-list#readme",
+  "dependencies": {
+    "@types/react-native": "^0.66.15",
+    "react": "^17.0.2",
+    "react-native": "^0.67.2"
+  }
+}
