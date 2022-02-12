@@ -1,8 +1,9 @@
 # react-native-staggered-list
 
-`react-native` 可以自己测量 Item 高度的瀑布流组件。之所以起这个名字，是因为在 `Android` 开发中，官方的 `RecycleView` 有一个瀑布流的 `LayoutManager` 就叫 `Staggered`，因此有了 `StaggeredList`。
+> `ScrollView` 封装的 `react-native` 可以自己测量 Item 高度的瀑布流组件。
 
-因为这一段时间忙着上线，这个组件可能会更新比较慢，如果对你有了帮助，请点击一下右上角的 `Star`，当然如果有什么建议欢迎提 `issues` 和 `pr`。
+之前看了 `GitHub` 上面的很多瀑布流组件的库，基本都是瞎🐔儿扯，还得自己手动传 `View` 的高度。就算是图片的高度后端能返回，前端 `View` 的高度呢，这个还没渲染怎么能拿到？
+
 
 ## 命名规范
 
@@ -37,7 +38,17 @@
 
 ## 实现原理
 
-其实原理比较简单，只是实现的过程比较麻烦。
+两种思路：
+- 一种就是直接挨个 `index%column` 往里面填充，适合左右两边高度差不多相等的情况。
+
+- 另外一种就是等上一个渲染完了，然后回调完了高度，找出这几列高度最低的一个，然后渲染下一个。
+
+目前这个组件实现的原理是第二种情况。
+
+``` javascript
+views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
+```
+
 
 ## 还需要完善的工作
 
@@ -56,3 +67,8 @@
 ### Version 1.0.0
 
 🍀 Published react-native-staggered-list，支持分页加载 & Header & Footer 等功能。
+
+- Version 1.0.1
+  - 🗑 删除多余依赖
+  - ✍🏻 重命名 `StaggeredListView` → `StaggeredList` 
+  - ✍🏻 更新 README.md

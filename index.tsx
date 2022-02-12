@@ -1,3 +1,3 @@
-import StaggeredListView from "./src";
+import StaggeredList from "./src";
 
-export { StaggeredListView };
+export { StaggeredList };

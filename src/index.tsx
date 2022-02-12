@@ -20,7 +20,7 @@ type IndexEffect = {
   needDraw: boolean;
 };
 
-interface StaggeredListViewProps {
+interface StaggeredListProps {
   columns: number;
   datas: any[];
   /** Header / footer */
@@ -33,7 +33,7 @@ interface StaggeredListViewProps {
   showsVerticalScrollIndicator?: boolean;
 }
 
-const StaggeredListView: React.FC<StaggeredListViewProps> = (props) => {
+const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   // 每一列的 ref
   type ListHandlers = React.ElementRef<typeof List>;
   const views = Array.from({ length: props.columns }, (_, i) =>
@@ -139,4 +139,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StaggeredListView;
+export default StaggeredList;
