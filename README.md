@@ -53,13 +53,16 @@ views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
 🍀 Published react-native-staggered-list，支持分页加载 & Header & Footer 等功能。
 
 - Version 1.0.1
-  - 🗑 删除多余依赖
-  - ✍🏻 重命名 `StaggeredListView` → `StaggeredList`
-  - ✍🏻 更新 README.md
+  - 🗑 删除多余依赖。
+  - ✍🏻 重命名 `StaggeredListView` → `StaggeredList`。
+  - ✍🏻 更新 README.md。
 - Version 1.1.0
 
-  - 🆕 新增原生滑动事件的回调: `onScroll: (NativeSyntheticEvent<NativeScrollEvent>) => void`
+  - 🆕 新增原生滑动事件的回调: `onScroll: (NativeSyntheticEvent<NativeScrollEvent>) => void`。
 
-  - 🆕 新增 Header & Columns & Footer 测量高度的回调
+  - 🆕 新增 Header & Columns & Footer 测量高度的回调。
 
   有了以上这两个事件，就可以在使用的时候，实现 `TabBar` 的渐变以及吸顶效果。
+
+- Version 1.1.1
+  - 🐞 修改初始化 `measureResult`，防止 `header` 或者 `footer` 为 `null` 造成的回调参数为空的 BUG。

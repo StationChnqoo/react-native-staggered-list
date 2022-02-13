@@ -70,9 +70,11 @@ const StaggeredList: React.FC<StaggeredListProps> = props => {
     columnsHeights: Array.from({length: props.columns}, (_, i) => 0),
   });
   // 各个高度的测量结果
-  const [measureResult, setMeasureResult] = useState<MeasureResult>(
-    Object.create(null),
-  );
+  const [measureResult, setMeasureResult] = useState<MeasureResult>({
+    footer: 0,
+    header: 0,
+    columns: Array.from({length: props.columns}, (_, i) => 0),
+  });
 
   /**
    * 最小高度的下标
