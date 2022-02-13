@@ -1,3 +1,3 @@
-import StaggeredList from "./src";
+import StaggeredList from './src';
 
-export { StaggeredList };
+export {StaggeredList};

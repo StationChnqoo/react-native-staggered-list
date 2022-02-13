@@ -1,6 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import List from "./List";
+import React, {useEffect, useState} from 'react';
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import List from './List';
+import Item from './Item';
 
 /**
  * 源数据或者测量完每一列的高度变更都会导致重新渲染
@@ -20,6 +27,18 @@ type IndexEffect = {
   needDraw: boolean;
 };
 
+/**
+ * 测量结果
+ * - header
+ * - list: 每一列的高度
+ * - footer
+ */
+type MeasureResult = {
+  header: number;
+  columns: number[];
+  footer: number;
+};
+
 interface StaggeredListProps {
   columns: number;
   datas: any[];
@@ -31,29 +50,49 @@ interface StaggeredListProps {
   onLoadComplete?: () => void;
   /** 显示纵向滚动条 */
   showsVerticalScrollIndicator?: boolean;
+  /** Header、List、Footer 的测量结果 */
+  onMeasure?: (measureResult: MeasureResult) => void;
+  /** 滑动事件 */
+  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
-const StaggeredList: React.FC<StaggeredListProps> = (props) => {
+const StaggeredList: React.FC<StaggeredListProps> = props => {
   // 每一列的 ref
   type ListHandlers = React.ElementRef<typeof List>;
-  const views = Array.from({ length: props.columns }, (_, i) =>
-    React.useRef<ListHandlers>()
+  const views = Array.from({length: props.columns}, (_, i) =>
+    React.useRef<ListHandlers>(),
   );
   // 绘制进度
-  const [index, setIndex] = useState<IndexEffect>({ index: 0, needDraw: true });
+  const [index, setIndex] = useState<IndexEffect>({index: 0, needDraw: true});
   // datas / columnsHeights 更改后 item 的 Push
   const [uniteEffects, setUniteEffects] = useState<UniteEffect>({
     datas: [],
-    columnsHeights: Array.from({ length: props.columns }, (_, i) => 0),
+    columnsHeights: Array.from({length: props.columns}, (_, i) => 0),
   });
+  // 各个高度的测量结果
+  const [measureResult, setMeasureResult] = useState<MeasureResult>(
+    Object.create(null),
+  );
+
   /**
    * 最小高度的下标
    * @returns
    */
   const findMinColumn = () => {
     let min = Math.min(...uniteEffects.columnsHeights);
-    return uniteEffects.columnsHeights.findIndex((it) => it == min);
+    return uniteEffects.columnsHeights.findIndex(it => it == min);
   };
+
+  const useMeasureResultChanged = (key: keyof MeasureResult, value: any) => {
+    const _measureResult = JSON.parse(JSON.stringify(measureResult));
+    _measureResult[key] = value;
+    setMeasureResult(_measureResult);
+  };
+
+  useEffect(() => {
+    props.onMeasure && props?.onMeasure(measureResult);
+    return () => {};
+  }, [measureResult]);
 
   useEffect(() => {
     // views[findMinColumn()].current.push(datas[index]);
@@ -67,7 +106,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   useEffect(() => {
     // console.log('uniteEffects: ', uniteEffects);
     if (uniteEffects.datas.length > 0) {
-      setIndex({ index: index.index + 1, needDraw: true });
+      setIndex({index: index.index + 1, needDraw: true});
     }
     return () => {};
   }, [uniteEffects]);
@@ -76,7 +115,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     // console.log(`ListView 第${index}个 item.`);
     if (index.needDraw) {
       if (index.index >= uniteEffects.datas.length) {
-        setIndex({ index: index.index - 1, needDraw: false });
+        setIndex({index: index.index - 1, needDraw: false});
         index.index > 0 && props?.onLoadComplete();
       } else {
         views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
@@ -86,15 +125,23 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   }, [index]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       <ScrollView
+        scrollEventThrottle={100}
+        onScroll={e => {
+          props.onScroll && props?.onScroll(e);
+        }}
         showsVerticalScrollIndicator={
           props?.showsVerticalScrollIndicator ?? false
-        }
-      >
-        {props?.header ?? null}
+        }>
+        <Item
+          onMeasuredHeight={height => {
+            useMeasureResultChanged('header', height);
+          }}>
+          {props?.header ?? <View />}
+        </Item>
         <View style={styles.viewColumns}>
-          {Array.from({ length: props.columns }, (_, i) => (
+          {Array.from({length: props.columns}, (_, i) => (
             // <FlatList
             //   key={i}
             //   data={Array.from({length: 100}, (_, i) => i)}
@@ -106,22 +153,27 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
             <List
               key={i}
               id={i}
-              renderItem={(item) => props.renderItem(item)}
-              ref={(ref) => (views[i].current = ref)}
-              useLayoutChanged={(height) => {
+              renderItem={item => props.renderItem(item)}
+              ref={ref => (views[i].current = ref)}
+              useLayoutChanged={height => {
                 // console.log('useLayoutChanged height: ', height);
                 let _uniteEffects = JSON.parse(JSON.stringify(uniteEffects));
                 let heights = [..._uniteEffects.columnsHeights];
                 heights[i] = Math.ceil(height);
                 // console.log('newHeights: ', heights);
                 _uniteEffects.columnsHeights = heights;
+                useMeasureResultChanged('columns', heights);
                 setUniteEffects(_uniteEffects);
               }}
             />
-            //<View>{Array.from({length: 100}, (_, j) => <Text>{j}</Text>)}</View>
           ))}
         </View>
-        {props?.footer ?? null}
+        <Item
+          onMeasuredHeight={height => {
+            useMeasureResultChanged('footer', height);
+          }}>
+          {props?.footer ?? null}
+        </Item>
       </ScrollView>
     </View>
   );
@@ -130,12 +182,12 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
 const styles = StyleSheet.create({
   view: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   viewColumns: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 });
 
