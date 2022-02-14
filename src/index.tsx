@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -54,6 +55,8 @@ interface StaggeredListProps {
   onMeasure?: (measureResult: MeasureResult) => void;
   /** 滑动事件 */
   onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  /** 刷新 */
+  onRefresh?: () => void;
 }
 
 const StaggeredList: React.FC<StaggeredListProps> = props => {
@@ -75,6 +78,7 @@ const StaggeredList: React.FC<StaggeredListProps> = props => {
     header: 0,
     columns: Array.from({length: props.columns}, (_, i) => 0),
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   /**
    * 最小高度的下标
@@ -123,12 +127,32 @@ const StaggeredList: React.FC<StaggeredListProps> = props => {
         views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
       }
     }
+    // console.log('index: ', index);
     return () => {};
   }, [index]);
 
   return (
     <View style={{flex: 1}}>
       <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              props.onRefresh && props.onRefresh();
+              setIndex({index: -1, needDraw: false});
+              setUniteEffects({
+                datas: [],
+                columnsHeights: Array.from(
+                  {length: props.columns},
+                  (_, i) => 0,
+                ),
+              });
+              Array.from({length: props.columns}, (_, i) =>
+                views[i].current.clear(),
+              );
+            }}
+          />
+        }
         scrollEventThrottle={100}
         onScroll={e => {
           props.onScroll && props?.onScroll(e);

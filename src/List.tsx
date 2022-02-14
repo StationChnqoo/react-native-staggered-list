@@ -10,11 +10,7 @@ interface ListProps {
 
 type ListHandlers = {
   push: (item: any) => void;
-};
-
-type ItemWidthHieght = {
-  id: any;
-  height: number;
+  clear: () => void;
 };
 
 const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
@@ -22,16 +18,17 @@ const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
   ref,
 ) => {
   const [datas, setDatas] = useState([]);
-
-  const [itemsMap, setItemsMap] = useState<ItemWidthHieght>(
-    Object.create(null),
-  );
+  const [itemsMap, setItemsMap] = useState<any>(Object.create(null));
 
   useImperativeHandle(ref, () => ({
     push: item => {
       setDatas(_datas => {
         return [..._datas, item];
       });
+    },
+    clear: () => {
+      setDatas([]);
+      setItemsMap(Object.create(null));
     },
     // height: () => {
     //   let height = 0;
