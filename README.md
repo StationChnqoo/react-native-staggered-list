@@ -6,6 +6,8 @@
 
 **觉得有用，路过的各位老铁们右上角的小星星走起来，谢谢。**
 
+![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListDemo.gif)
+
 ## 命名规范
 
 整体的设计思想模仿的是 `FlastList`，提供以下内容的自定义。
@@ -32,14 +34,6 @@ npm install react-native-staggered-list
 新建了一个空的工程，只修改了下 `App.js`。
 
 ```typescript
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -223,8 +217,6 @@ views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
 - `ScrollView` 里面套 `VirtualList` 是否可行，今天下午试了一把感觉好像是不行，还是会有警告。
 
 - 性能: 这个有时间接着优化，准备长期维护这个项目。
-
-- 下拉刷新: 今天注意到 `ScrollView` 里面也有 `RefreshControl`，下个版本补充上。
 
 - 打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。
 
