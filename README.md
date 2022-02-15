@@ -6,7 +6,7 @@
 
 **觉得有用，路过的各位老铁们右上角的小星星走起来，谢谢。**
 
-![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListDemo.gif)
+![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListDemo0215.gif)
 
 ## 命名规范
 
@@ -243,3 +243,5 @@ views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
 - Version 1.2.0
   - 🆕 新增下拉刷新功能 `onrefresh: () => void`。
   - 🛠 更新 README.md，添加运行截图，以及示例代码。
+- Version 1.2.1
+  - 🛠 修改 README.md。
