@@ -4,8 +4,10 @@ import {
   NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
+  StyleProp,
   StyleSheet,
   View,
+  ViewStyle,
 } from 'react-native';
 import List from './List';
 import Item from './Item';
@@ -57,6 +59,8 @@ interface StaggeredListProps {
   onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   /** 刷新 */
   onRefresh?: () => void;
+  /** 内容的样式 */
+  columnsStyle?: StyleProp<ViewStyle>;
 }
 
 const StaggeredList: React.FC<StaggeredListProps> = props => {
@@ -122,9 +126,11 @@ const StaggeredList: React.FC<StaggeredListProps> = props => {
     if (index.needDraw) {
       if (index.index >= uniteEffects.datas.length) {
         setIndex({index: index.index - 1, needDraw: false});
-        index.index > 0 && props?.onLoadComplete();
+        index.index > 0 && props.onLoadComplete && props.onLoadComplete();
       } else {
-        views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
+        let view = views[findMinColumn()].current;
+        view &&
+          views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
       }
     }
     // console.log('index: ', index);
@@ -166,7 +172,7 @@ const StaggeredList: React.FC<StaggeredListProps> = props => {
           }}>
           {props?.header ?? <View />}
         </Item>
-        <View style={styles.viewColumns}>
+        <View style={[styles.viewColumns, props?.columnsStyle ?? null]}>
           {Array.from({length: props.columns}, (_, i) => (
             // <FlatList
             //   key={i}

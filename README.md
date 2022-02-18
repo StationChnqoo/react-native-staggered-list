@@ -24,7 +24,7 @@
 | onScroll                     | `(NativeSyntheticEvent<NativeScrollEvent>) => void` | ScrollView native event.                 |
 | onMeasure                    | `(MeasureResult) => void`                           | Header、Footer、Columns measured result. |
 | onRefresh                    | `() => void`                                        | Refreshed event.                         |
-
+|columnsStyle|`StyleProp<ViewStyle>`|Columns style|
 ## How to use
 
 ```bash
@@ -245,3 +245,5 @@ views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
   - 🛠 更新 README.md，添加运行截图，以及示例代码。
 - Version 1.2.1
   - 🛠 修改 README.md。
+- Version 1.3.0
+  - 🆕 新增 `Columns` 样式自定义，可以自己调节 `Header` 和 `Columns` 之间的距离，也可以自己调节 `Columns` 和屏幕两边的边距。
