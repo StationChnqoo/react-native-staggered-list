@@ -287,3 +287,5 @@ const Item: React.FC<ItemProps> = (props) => {
   - 🗑 移除原来除了测量除了 `header` 和 `footer` 测量的逻辑，直接从左到右每一列挨个填充 `Item`。
 - Version 1.4.1
   - 🐞 潜藏的 BUG。
+- Version 1.4.2
+  - 🐞 瀑布流渲染的错误。

@@ -18,6 +18,11 @@ type MeasureResult = {
   footer: number;
 };
 
+type Effects = {
+  index: number;
+  datas: any[];
+};
+
 interface StaggeredListProps {
   columns: number;
   datas: any[];
@@ -45,10 +50,12 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   const views = Array.from({ length: props.columns }, (_, i) =>
     React.useRef<ListHandlers>()
   );
-  // 绘制进度
-  const [index, setIndex] = useState(0);
-  // datas / columnsHeights 更改后 item 的 Push
-  const [datas, setDatas] = useState([]);
+
+  const [effects, setEffects] = useState<Effects>({
+    index: 0,
+    datas: [],
+  });
+
   // 各个高度的测量结果
   const [measureResult, setMeasureResult] = useState<MeasureResult>({
     footer: 0,
@@ -67,6 +74,17 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     setMeasureResult(_measureResult);
   };
 
+  /**
+   * 绘制进度或者数据源改变的时候
+   * @param key
+   * @param value
+   */
+  const useEffectsChanged = (key: keyof Effects, value: any) => {
+    const _effects = JSON.parse(JSON.stringify(effects));
+    _effects[key] = value;
+    setEffects(_effects);
+  };
+
   useEffect(() => {
     props.onMeasure && props?.onMeasure(measureResult);
     return () => {};
@@ -75,23 +93,23 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   useEffect(() => {
     // views[findMinColumn()].current.push(datas[index]);
     // console.log(`Datas.length: ${props.datas.length}`);
-    setDatas(JSON.parse(JSON.stringify(props.datas)));
+    useEffectsChanged("datas", [...props.datas]);
     return () => {};
   }, [props.datas]);
 
   useEffect(() => {
-    // console.log(`ListView 第${index}个 item.`);
-    if (datas.length > 0) {
-      for (let i = index; i < datas.length; i++) {
-        let view = views[i % props.columns].current;
-        view && view.push(datas[i]);
+    if (effects.datas.length > 0) {
+      if (effects.index == effects.datas.length) {
+        props?.onLoadComplete && props.onLoadComplete();
+      } else {
+        let i = effects.index % props.columns;
+        let item = effects?.datas[effects.index] ?? null;
+        item && views[i].current?.push(item);
+        useEffectsChanged("index", effects.index + 1);
       }
-      props?.onLoadComplete && props.onLoadComplete();
-      setIndex((t) => t + 1);
     }
-    // console.log('index: ', index);
     return () => {};
-  }, [datas]);
+  }, [effects]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -101,7 +119,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
             refreshing={refreshing}
             onRefresh={() => {
               props.onRefresh && props.onRefresh();
-              setIndex(0);
+              setEffects({ index: 0, datas: [] });
               Array.from({ length: props.columns }, (_, i) =>
                 views[i].current.clear()
               );
