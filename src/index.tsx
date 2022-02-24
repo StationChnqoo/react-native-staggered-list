@@ -71,7 +71,6 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     );
     let min = Math.min(...columnsHeights);
     let index = columnsHeights.findIndex((it) => it == min);
-    ewq;
     return index;
   };
 

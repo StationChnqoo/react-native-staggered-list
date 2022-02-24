@@ -294,3 +294,5 @@ const Item: React.FC<ItemProps> = (props) => {
 - Version 1.5.0
   - 🚀 综合 `从左到右依次填充` 和 `最小高度填充` 两种方式，使瀑布流两边高度尽量一致。
   - 🆕 新增 `List` → `Item` 右下角的 `index`，便于直观的看到渲染顺序和效果。
+- Version 1.5.1
+  - 🐞。
