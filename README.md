@@ -24,7 +24,8 @@
 | onScroll                     | `(NativeSyntheticEvent<NativeScrollEvent>) => void` | ScrollView native event.                 |
 | onMeasure                    | `(MeasureResult) => void`                           | Header、Footer、Columns measured result. |
 | onRefresh                    | `() => void`                                        | Refreshed event.                         |
-|columnsStyle|`StyleProp<ViewStyle>`|Columns style|
+| columnsStyle                 | `StyleProp<ViewStyle>`                              | Columns style                            |
+
 ## How to use
 
 ```bash
@@ -204,11 +205,45 @@ export default App;
 
 - 另外一种就是等上一个渲染完了，然后回调完了高度，找出这几列高度最低的一个，然后渲染下一个。
 
-目前这个组件实现的原理是第二种情况。
+~~ 目前这个组件实现的原理是第二种情况。~~
 
 ```javascript
-views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
+// views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
 ```
+
+最开始的时候确实用的是第二个思路，但是后来发现一种场景好像不太合适。比如说如果封装一个自动高度的图片组件。他会使目前的 `Item` → `onLayout()` 两次。
+
+> 因为 onLayout() 只要 Item 布局变了，他就会回调。
+
+那么我就要在 `renderItem()` 里面做文章，但是 `Item` 好像拿不到 `props.children` 里面的状态，这就很麻烦。想了很多方法，感觉都不是很好。
+
+代码贴出来:
+
+```js
+const Item: React.FC<ItemProps> = (props) => {
+  return (
+    <View
+      onLayout={(layout) => {
+        // console.log(layout.nativeEvent.layout);
+        layout.nativeEvent.layout.height > 0 &&
+          props.onMeasuredHeight(layout.nativeEvent.layout.height);
+      }}
+    >
+      {React.isValidElement(props.children) &&
+        React.cloneElement(props.children, {
+          nextRender: (next: boolean, height: number) => {
+            next && props.onMeasuredHeight(height);
+          },
+        })}
+      {/* {props.children} */}
+    </View>
+  );
+};
+```
+
+而且 `Item` 会不断的 `onLayout()` 还会有硬件方面性能的损失，再就是就算是拿到 `renderItem` 里面的状态的话，那也是像老母鸡 🐔 下蛋 🥚 一样，一个一个的渲染，体验上也说不过去。
+
+综上所述，从 `1.4.0` 版本开始，准备使用第一种思路，直接从左到右挨个排列。
 
 ## 还需要完善的工作
 
@@ -218,7 +253,8 @@ views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
 
 - 性能: 这个有时间接着优化，准备长期维护这个项目。
 
-- 打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。
+- ~~打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。~~
+  - 这个目前不是问题了，因为现在基本绝大多数项目都支持 `ts`。
 
 ## 版本更新记录
 
@@ -247,3 +283,5 @@ views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
   - 🛠 修改 README.md。
 - Version 1.3.0
   - 🆕 新增 `Columns` 样式自定义，可以自己调节 `Header` 和 `Columns` 之间的距离，也可以自己调节 `Columns` 和屏幕两边的边距。
+- Version 1.4.0
+  - 🗑 移除原来除了测量除了 `header` 和 `footer` 测量的逻辑，直接从左到右每一列挨个填充 `Item`。
