@@ -20,6 +20,7 @@ type MeasureResult = {
 
 type Effects = {
   index: number;
+  minIndex: number;
   datas: any[];
 };
 
@@ -53,6 +54,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
 
   const [effects, setEffects] = useState<Effects>({
     index: 0,
+    minIndex: 0,
     datas: [],
   });
 
@@ -63,26 +65,14 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  /**
-   * Header 和 Footer 测量结果发生改变的时候
-   * @param key
-   * @param value
-   */
-  const useMeasureResultChanged = (key: keyof MeasureResult, value: any) => {
-    const _measureResult = JSON.parse(JSON.stringify(measureResult));
-    _measureResult[key] = value;
-    setMeasureResult(_measureResult);
-  };
-
-  /**
-   * 绘制进度或者数据源改变的时候
-   * @param key
-   * @param value
-   */
-  const useEffectsChanged = (key: keyof Effects, value: any) => {
-    const _effects = JSON.parse(JSON.stringify(effects));
-    _effects[key] = value;
-    setEffects(_effects);
+  const findMinColumn = () => {
+    let columnsHeights = Array.from({ length: props.columns }, (_, i) =>
+      parseInt(`${views[i].current?.columnHeight()}`)
+    );
+    let min = Math.min(...columnsHeights);
+    let index = columnsHeights.findIndex((it) => it == min);
+    ewq;
+    return index;
   };
 
   useEffect(() => {
@@ -93,7 +83,12 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   useEffect(() => {
     // views[findMinColumn()].current.push(datas[index]);
     // console.log(`Datas.length: ${props.datas.length}`);
-    useEffectsChanged("datas", [...props.datas]);
+    /** 每次来一页新的数据，找一下当前的高度最小的列 */
+    setEffects({
+      index: effects.index,
+      datas: props.datas,
+      minIndex: findMinColumn(),
+    });
     return () => {};
   }, [props.datas]);
 
@@ -102,10 +97,19 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
       if (effects.index == effects.datas.length) {
         props?.onLoadComplete && props.onLoadComplete();
       } else {
-        let i = effects.index % props.columns;
         let item = effects?.datas[effects.index] ?? null;
-        item && views[i].current?.push(item);
-        useEffectsChanged("index", effects.index + 1);
+        item && views[effects.minIndex].current?.push(item, effects.index + 1);
+        setTimeout(() => {
+          setEffects({
+            index: effects.index + 1,
+            datas: effects.datas,
+            /** 默认按照从左到右依次填充，然后等最后剩了 props.columns 个数的时候，由小到大填充 */
+            minIndex:
+              effects.datas.length - effects.index > props.columns
+                ? (effects.minIndex + 1) % props.columns
+                : findMinColumn(),
+          });
+        }, 100);
       }
     }
     return () => {};
@@ -119,7 +123,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
             refreshing={refreshing}
             onRefresh={() => {
               props.onRefresh && props.onRefresh();
-              setEffects({ index: 0, datas: [] });
+              setEffects({ index: 0, datas: [], minIndex: 0 });
               Array.from({ length: props.columns }, (_, i) =>
                 views[i].current.clear()
               );
@@ -136,7 +140,10 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
       >
         <Item
           onMeasuredHeight={(height) => {
-            useMeasureResultChanged("header", height);
+            setMeasureResult({
+              header: height,
+              footer: measureResult.footer,
+            });
           }}
         >
           {props?.header ?? <View />}
@@ -153,7 +160,10 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
         </View>
         <Item
           onMeasuredHeight={(height) => {
-            useMeasureResultChanged("footer", height);
+            setMeasureResult({
+              header: measureResult.header,
+              footer: height,
+            });
           }}
         >
           {props?.footer ?? null}
