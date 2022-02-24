@@ -285,3 +285,5 @@ const Item: React.FC<ItemProps> = (props) => {
   - 🆕 新增 `Columns` 样式自定义，可以自己调节 `Header` 和 `Columns` 之间的距离，也可以自己调节 `Columns` 和屏幕两边的边距。
 - Version 1.4.0
   - 🗑 移除原来除了测量除了 `header` 和 `footer` 测量的逻辑，直接从左到右每一列挨个填充 `Item`。
+- Version 1.4.1
+  - 🐞 潜藏的 BUG。

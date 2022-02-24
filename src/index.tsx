@@ -102,10 +102,9 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
             onRefresh={() => {
               props.onRefresh && props.onRefresh();
               setIndex(0);
-              Array.from({ length: props.columns }, (_, i) => {
-                let view = views[i].current;
-                view && view.clear();
-              });
+              Array.from({ length: props.columns }, (_, i) =>
+                views[i].current.clear()
+              );
             }}
           />
         }
