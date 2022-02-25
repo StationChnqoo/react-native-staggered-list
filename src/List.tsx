@@ -1,10 +1,17 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import React, {
+  JSXElementConstructor,
+  ReactElement,
+  useImperativeHandle,
+  useState,
+} from "react";
+import { VirtualizedList } from "react-native";
 import Item from "react-native-staggered-list/src/Item";
 
 interface ListProps {
   id: number | string;
-  renderItem: (item: any) => React.ReactNode | View | React.FC;
+  renderItem: (
+    item: any
+  ) => ReactElement<any, string | JSXElementConstructor<any>>;
 }
 
 type ListHandlers = {
@@ -43,32 +50,52 @@ const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
   }));
 
   return (
-    <View style={{ flex: 1 }}>
-      {Array.from(datas, (_, i) => (
-        <View style={{ position: "relative" }}>
-          <Item
-            onMeasuredHeight={(h) => {
-              let _sum = JSON.parse(JSON.stringify(sum));
-              _sum[i] = h;
-              setSum(_sum);
-            }}
-            key={i}
-          >
-            {props.renderItem(_)}
-          </Item>
-          {/* <Text
-            style={{
-              color: "#FF5252",
-              bottom: 16,
-              right: 16,
-              position: "absolute",
-            }}
-          >
-            {indexes[i]}
-          </Text> */}
-        </View>
-      ))}
-    </View>
+    <VirtualizedList
+      scrollEventThrottle={100}
+      listKey={`Columns: ${props.id}`}
+      data={datas}
+      renderItem={(item) => (
+        <Item
+          onMeasuredHeight={(h) => {
+            let _sum = JSON.parse(JSON.stringify(sum));
+            _sum[item.index] = h;
+            setSum(_sum);
+          }}
+          key={item.index}
+        >
+          {props.renderItem(item.item)}
+        </Item>
+      )}
+      getItemCount={() => datas.length}
+      keyExtractor={(item, index) => `Item: ${indexes[index]}`}
+      getItem={(datas, index) => datas[index]}
+    />
+    // <View style={{ flex: 1 }}>
+    //   {Array.from(datas, (_, i) => (
+    //     <View style={{ position: "relative" }}>
+    //       <Item
+    //         onMeasuredHeight={(h) => {
+    //           let _sum = JSON.parse(JSON.stringify(sum));
+    //           _sum[i] = h;
+    //           setSum(_sum);
+    //         }}
+    //         key={i}
+    //       >
+    //         {props.renderItem(_)}
+    //       </Item>
+    //       {/* <Text
+    //         style={{
+    //           color: "#FF5252",
+    //           bottom: 16,
+    //           right: 16,
+    //           position: "absolute",
+    //         }}
+    //       >
+    //         {indexes[i]}
+    //       </Text> */}
+    //     </View>
+    //   ))}
+    // </View>
   );
 };
 

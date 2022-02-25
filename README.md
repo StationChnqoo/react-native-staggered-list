@@ -32,171 +32,6 @@
 npm install react-native-staggered-list
 ```
 
-新建了一个空的工程，只修改了下 `App.js`。
-
-```typescript
-import React, { useEffect, useState } from "react";
-import {
-  Dimensions,
-  Image,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from "react-native";
-import { StaggeredList } from "react-native-staggered-list";
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from "react-native/Libraries/NewAppScreen";
-import souls from "./datas/soul.json";
-
-const Section = ({ children, title }) => {
-  const isDarkMode = useColorScheme() === "dark";
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}
-      >
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}
-      >
-        {children}
-      </Text>
-    </View>
-  );
-};
-
-const App = () => {
-  const isDarkMode = useColorScheme() === "dark";
-  const [pageIndex, setPageIndex] = useState(0);
-  const [datas, setDatas] = useState([]);
-
-  useEffect(() => {
-    let _datas = JSON.parse(JSON.stringify(datas));
-    let extra = [];
-    for (let i = 0; i < 10; i++) {
-      let index = parseInt(`${souls.data.emojiList.length * Math.random()}`);
-      let item = souls.data.emojiList[index];
-      console.log(item);
-      extra.push({
-        id: Math.random(),
-        page: `第${pageIndex + 1}页`,
-        title: `第 ${i + 1} 个 Item`,
-        message: item.keyWordList.join("::"),
-        image: item.emojiResourceUrl,
-      });
-    }
-    setDatas(_datas.concat(extra));
-    return () => {};
-  }, [pageIndex]);
-
-  useEffect(() => {
-    console.log(new Date(), datas.length);
-    return () => {};
-  }, [datas]);
-
-  const size = Dimensions.get("screen").width / 3 - 4;
-
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <StaggeredList
-        columns={3}
-        datas={datas}
-        renderItem={(item) => {
-          // console.log('Using listView renderItem: ', item);
-          return (
-            <View style={{ padding: 2 }}>
-              <View style={{ backgroundColor: "white", borderRadius: 4 }}>
-                <Text style={{ fontSize: 16, color: "#333" }}>
-                  {item?.title}
-                </Text>
-                <Text style={{ fontSize: 12, color: "#666" }}>
-                  {item?.message}
-                </Text>
-                <Image
-                  source={{ uri: item?.image }}
-                  style={{ height: size, width: size }}
-                />
-              </View>
-            </View>
-          );
-        }}
-        onLoadComplete={() => {
-          pageIndex < 10 && setPageIndex((t) => t + 1);
-        }}
-        header={
-          <View
-            style={{
-              backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            }}
-          >
-            <Header />
-            <Section title="Step One">
-              Edit <Text style={styles.highlight}>App.js</Text> to change this
-              screen and then come back to see your edits.
-            </Section>
-            <Section title="See Your Changes">
-              <ReloadInstructions />
-            </Section>
-            <Section title="Debug">
-              <DebugInstructions />
-            </Section>
-            <Section title="Learn More">
-              Read the docs to discover what to do next:
-            </Section>
-          </View>
-        }
-        footer={<LearnMoreLinks />}
-        onMeasure={(e) => {
-          console.log(e);
-        }}
-        onScroll={(e) => {
-          console.log(e.nativeEvent.contentOffset.y);
-        }}
-      />
-    </SafeAreaView>
-  );
-};
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "600",
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: "400",
-  },
-  highlight: {
-    fontWeight: "700",
-  },
-});
-
-export default App;
-```
-
 ## 实现原理
 
 两种思路：
@@ -245,15 +80,15 @@ const Item: React.FC<ItemProps> = (props) => {
 
 ~~综上所述，从 `1.4.0` 版本开始，准备使用第一种思路，直接从左到右挨个排列。~~
 
-不断改进中 。。。 。。。
-
 ## 还需要完善的工作
 
 因为目前项目着急上线，目前暂时能想到的还有以下的内容要做。
 
-- `ScrollView` 里面套 `VirtualList` 是否可行，今天下午试了一把感觉好像是不行，还是会有警告。
+- ~~`ScrollView` 里面套 `VirtualizedList` 是否可行，今天下午试了一把感觉好像是不行，还是会有警告。~~
+  - `1.6.0` 版本采用的 `VirtualizedList` 套 `VirtualizedList`，目前暂时没有警告了。
 
 - 性能: 这个有时间接着优化，准备长期维护这个项目。
+  - `1.6.0` 版本采用的 `VirtualizedList` 套 `VirtualizedList`，理论上性能应该比之前好一点儿，周末回家测试下性能。
 
 - ~~打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。~~
   - 这个目前不是问题了，因为现在基本绝大多数项目都支持 `ts`。
@@ -296,3 +131,5 @@ const Item: React.FC<ItemProps> = (props) => {
   - 🆕 新增 `List` → `Item` 右下角的 `index`，便于直观的看到渲染顺序和效果。
 - Version 1.5.1
   - 🐞。
+- Version 1.6.0
+  - 🚀 全新升级: 最外层由 `ScrollView` → `VirtualizedList`，包括内层的 `View` 堆砌也换成了 `VirtualizedList`。而且还解决了一些奇怪的问题，比如之前遇见过把 `Banner` 放到 `Header` 里面无法自动轮播，必须要手动碰一下才可以。
