@@ -12,6 +12,7 @@ import {
   View,
   ViewStyle,
   VirtualizedList,
+  RefreshControl
 } from "react-native";
 import List from "./List";
 
