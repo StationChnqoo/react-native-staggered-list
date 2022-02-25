@@ -7,21 +7,13 @@ import React, {
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
-  RefreshControl,
   StyleProp,
   StyleSheet,
   View,
   ViewStyle,
   VirtualizedList,
 } from "react-native";
-import Item from "./Item";
 import List from "./List";
-
-/** Header 和 Footer 的测量结果 */
-type MeasureResult = {
-  header: number;
-  footer: number;
-};
 
 type Effects = {
   index: number;
@@ -42,8 +34,6 @@ interface StaggeredListProps {
   onLoadComplete?: () => void;
   /** 显示纵向滚动条 */
   showsVerticalScrollIndicator?: boolean;
-  /** Header、List、Footer 的测量结果 */
-  onMeasure?: (measureResult: MeasureResult) => void;
   /** 滑动事件 */
   onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   /** 刷新 */
@@ -65,11 +55,6 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     datas: [],
   });
 
-  // 各个高度的测量结果
-  const [measureResult, setMeasureResult] = useState<MeasureResult>({
-    footer: 0,
-    header: 0,
-  });
   const [refreshing, setRefreshing] = useState(false);
 
   const findMinColumn = () => {
@@ -80,11 +65,6 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     let index = columnsHeights.findIndex((it) => it == min);
     return index;
   };
-
-  useEffect(() => {
-    props.onMeasure && props?.onMeasure(measureResult);
-    return () => {};
-  }, [measureResult]);
 
   useEffect(() => {
     // views[findMinColumn()].current.push(datas[index]);
@@ -123,27 +103,20 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
 
   return (
     <VirtualizedList
-      style={{ flex: 1 }}
-      ListHeaderComponent={
-        <Item
-          onMeasuredHeight={(h) => {
-            setMeasureResult({ header: h, footer: measureResult.footer });
-          }}
-        >
-          {props?.header ?? null}
-        </Item>
-      }
-      ListFooterComponent={
-        <Item
-          onMeasuredHeight={(h) => {
-            setMeasureResult({ header: measureResult.header, footer: h });
-          }}
-        >
-          {props?.footer ?? null}
-        </Item>
-      }
       data={[""]}
-      keyExtractor={(item, index) => `StaggeredList: ${index}`}
+      style={{ flex: 1 }}
+      getItemCount={() => 1}
+      scrollEventThrottle={100}
+      getItem={(datas, index) => datas[index]}
+      ListHeaderComponent={props?.header ?? null}
+      ListFooterComponent={props?.footer ?? null}
+      onScroll={(e) => {
+        props.onScroll && props?.onScroll(e);
+      }}
+      showsVerticalScrollIndicator={
+        props?.showsVerticalScrollIndicator ?? false
+      }
+      keyExtractor={(item, index) => `react-native-staggered-list: ${index}`}
       renderItem={(info) => (
         <View style={[styles.viewColumns, props?.columnsStyle ?? null]}>
           {Array.from({ length: props.columns }, (_, i) => (
@@ -156,25 +129,17 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
           ))}
         </View>
       )}
-      getItem={(datas, index) => datas[index]}
-      getItemCount={() => 1}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => {
-            props.onRefresh && props.onRefresh();
+            props?.onRefresh && props.onRefresh();
+            setEffects({ index: 0, datas: [], minIndex: 0 });
             Array.from({ length: props.columns }, (_, i) =>
               views[i].current.clear()
             );
           }}
         />
-      }
-      scrollEventThrottle={100}
-      onScroll={(e) => {
-        props.onScroll && props?.onScroll(e);
-      }}
-      showsVerticalScrollIndicator={
-        props?.showsVerticalScrollIndicator ?? false
       }
     />
   );

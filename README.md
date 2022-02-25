@@ -22,7 +22,6 @@
 | footer                       | `React.Node`                                        | Footer view.                             |
 | showsVerticalScrollIndicator | `boolean`                                           | Is showing showsVerticalScrollIndicator. |
 | onScroll                     | `(NativeSyntheticEvent<NativeScrollEvent>) => void` | ScrollView native event.                 |
-| onMeasure                    | `(MeasureResult) => void`                           | Header、Footer、Columns measured result. |
 | onRefresh                    | `() => void`                                        | Refreshed event.                         |
 | columnsStyle                 | `StyleProp<ViewStyle>`                              | Columns style                            |
 
@@ -85,9 +84,11 @@ const Item: React.FC<ItemProps> = (props) => {
 因为目前项目着急上线，目前暂时能想到的还有以下的内容要做。
 
 - ~~`ScrollView` 里面套 `VirtualizedList` 是否可行，今天下午试了一把感觉好像是不行，还是会有警告。~~
+
   - `1.6.0` 版本采用的 `VirtualizedList` 套 `VirtualizedList`，目前暂时没有警告了。
 
 - 性能: 这个有时间接着优化，准备长期维护这个项目。
+
   - `1.6.0` 版本采用的 `VirtualizedList` 套 `VirtualizedList`，理论上性能应该比之前好一点儿，周末回家测试下性能。
 
 - ~~打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。~~
@@ -132,4 +133,8 @@ const Item: React.FC<ItemProps> = (props) => {
 - Version 1.5.1
   - 🐞。
 - Version 1.6.0
+
   - 🚀 全新升级: 最外层由 `ScrollView` → `VirtualizedList`，包括内层的 `View` 堆砌也换成了 `VirtualizedList`。而且还解决了一些奇怪的问题，比如之前遇见过把 `Banner` 放到 `Header` 里面无法自动轮播，必须要手动碰一下才可以。
+
+- Version 1.6.1
+  -🗑 删除 `Header` 以及 `Footer` 的测量的回调。
