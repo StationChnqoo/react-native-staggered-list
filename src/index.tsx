@@ -71,21 +71,35 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     return index;
   };
 
-  /**
-   * 每次来一页新的数据
-   * 1. 找一下当前的高度最小的列
-   * 2. 防抖，因为这个时候还有一部分数据是在渲染中，所以可以防止用户操作起来不断刷新
-   */
+  /** 每次来一页新的数据，找一下当前的高度最小的列。 */
+  useEffect(() => {
+    setEffects({
+      index: effects.index,
+      datas: props.datas,
+      minIndex: findMinColumn(),
+    });
+    setRefreshing(false);
+    return () => {};
+  }, [props.datas]);
+
+  /** 从 Refresh 就杜绝反复下拉刷新，不进行回调 */
   useDebounceEffect(
     () => {
-      setEffects({
-        index: effects.index,
-        datas: props.datas,
-        minIndex: findMinColumn(),
-      });
+      if (refreshing) {
+        props?.onRefresh && props.onRefresh();
+        setEffects({ index: 0, datas: [], minIndex: 0 });
+        Array.from({ length: props.columns }, (_, i) =>
+          views[i].current.clear()
+        );
+        setEffects({
+          index: effects.index,
+          datas: props.datas,
+          minIndex: findMinColumn(),
+        });
+      }
       return () => {};
     },
-    [props.datas],
+    [refreshing],
     { leading: true, trailing: false, wait: 5000 }
   );
 
@@ -114,7 +128,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     }
     return () => {};
   }, [effects]);
-  
+
   return (
     <VirtualizedList
       {...responder.panHandlers}
@@ -148,11 +162,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => {
-            props?.onRefresh && props.onRefresh();
-            setEffects({ index: 0, datas: [], minIndex: 0 });
-            Array.from({ length: props.columns }, (_, i) =>
-              views[i].current.clear()
-            );
+            setRefreshing(true);
           }}
         />
       }

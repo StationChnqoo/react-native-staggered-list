@@ -141,5 +141,9 @@ const Item: React.FC<ItemProps> = (props) => {
 - Version 1.6.2
   - 🐞 `RefreshControl` 报错。
 - Version 1.7.0
+
   - 🐞 新增下拉刷新的防抖的处理，防止用户不断下拉刷新造成重复渲染的 BUG。
   - 💄 优化瀑布流排列，不可见区域采用延时处理，排列更为准确。
+
+- Version 1.7.1
+  - 🐞 修改了一下防抖的时机，改为 `onRefresh()` 回调前就进行处理。
