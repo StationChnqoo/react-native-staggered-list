@@ -1,8 +1,8 @@
 # react-native-staggered-list
 
-基于 `ScrollView` 封装的 `react-native` 可以自己测量 Item 高度的瀑布流组件。
+基于 `VirtualizedList` 封装的 `react-native` 可以自己测量 Item 高度的瀑布流组件。
 
-之前看了 `GitHub` 上面几个瀑布流组件的库，基本都是踏 🐴 瞎 🐔 儿扯，还得自己手动传 `View` 的高度。就算是图片的高度后端能返回，前端 `View` 的高度呢，这个还没渲染怎么能拿到？能前端自己搞定的活儿，就不用麻烦后端的同学们。
+之前看了 `GitHub` 上面几个瀑布流组件的库，基本都是踏 🐴 瞎 🐔 儿扯，还得自己手动传 `View` 的高度。
 
 **觉得有用，路过的各位老铁们右上角的小星星走起来，谢谢。**
 
@@ -10,7 +10,7 @@
 
 ## 命名规范
 
-整体的设计思想模仿的是 `FlastList`，提供以下内容的自定义。
+整体的设计思想模仿的是 `FlatList`，提供以下内容的自定义。
 
 | Name                         | Type                                                | Description                              |
 | :--------------------------- | :-------------------------------------------------- | :--------------------------------------- |
@@ -29,6 +29,31 @@
 
 ```bash
 npm install react-native-staggered-list
+```
+
+```JS
+<StaggeredList
+  onRefresh={() => {
+    setR(Math.random());
+    setPageIndex(1);
+  }}
+  header={<View />}
+  datas={datas}
+  renderItem={(item) => <HomeItem item={item} />}
+  columns={2}
+  columnsStyle={{
+    justifyContent: 'space-around',
+    paddingHorizontal: 5 * vw,
+  }}
+  onScroll={(e) => {
+    setTabBarOpacity(
+      Math.min(1, e.nativeEvent.contentOffset.y / imgHeight),
+    );
+  }}
+  onLoadComplete={() => {
+    setPageIndex((t) => t + 1);
+  }}
+/>
 ```
 
 ## 实现原理
@@ -78,6 +103,9 @@ const Item: React.FC<ItemProps> = (props) => {
 而且 `Item` 会不断的 `onLayout()` 还会有硬件方面性能的损失，再就是就算是拿到 `renderItem` 里面的状态的话，那也是像老母鸡 🐔 下蛋 🥚 一样，一个一个的渲染，体验上也说不过去。
 
 ~~综上所述，从 `1.4.0` 版本开始，准备使用第一种思路，直接从左到右挨个排列。~~
+
+目前的思路是:
+为了节省时间，优化体验，刚开始肉眼可见的区域是直接从左到右依次填充。给了一个高度容错的范围，默认 `[0, 2*props.columns]`。在这个范围里面的数据，渲染的时候，延时 `1000ms`，这样儿确保了前面的数据渲染完了，拿到的高度能更真实一些。也就是说最后这几个 `Item` 是优化布局，纠错用的。
 
 ## 还需要完善的工作
 
@@ -149,3 +177,5 @@ const Item: React.FC<ItemProps> = (props) => {
   - 🐞 修改了一下防抖的时机，改为 `onRefresh()` 回调前就进行处理。
 - Version 1.7.2
   - 🐞 还是防抖的逻辑，不要控制 `refreshing`，控制 `r` → `setR(Math.random())`。
+- Version 1.7.3
+  - 🛠 更新 README.md。
