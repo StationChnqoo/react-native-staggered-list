@@ -7,7 +7,7 @@ import React, {
 import { VirtualizedList } from "react-native";
 import Item from "react-native-staggered-list/src/Item";
 
-interface ListProps {
+interface ListProps<ItemT> {
   id: number | string;
   renderItem: (
     item: any
@@ -15,9 +15,9 @@ interface ListProps {
 }
 
 type ListHandlers = {
-  push: (item: any, index: number) => void;
   clear: () => void;
   columnHeight: () => number;
+  push: (item: any, index: number) => void;
 };
 
 const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
@@ -51,9 +51,12 @@ const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
 
   return (
     <VirtualizedList
+      data={datas}
       scrollEventThrottle={100}
       listKey={`Columns: ${props.id}`}
-      data={datas}
+      getItemCount={() => datas.length}
+      getItem={(datas, index) => datas[index]}
+      keyExtractor={(item, index) => `Item: ${indexes[index]}`}
       renderItem={(item) => (
         <Item
           onMeasuredHeight={(h) => {
@@ -66,9 +69,6 @@ const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
           {props.renderItem(item.item)}
         </Item>
       )}
-      getItemCount={() => datas.length}
-      keyExtractor={(item, index) => `Item: ${indexes[index]}`}
-      getItem={(datas, index) => datas[index]}
     />
     // <View style={{ flex: 1 }}>
     //   {Array.from(datas, (_, i) => (

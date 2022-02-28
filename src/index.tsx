@@ -19,34 +19,40 @@ import {
 } from "react-native";
 import List from "./List";
 
-type Effects = {
+type Effects<ItemT> = {
   index: number;
   minIndex: number;
-  datas: any[];
+  datas: ItemT[];
 };
 
-interface StaggeredListProps {
+interface StaggeredListProps<ItemT> {
+  datas: ItemT[];
   columns: number;
-  datas: any[];
-  /** Header / footer */
-  header?: ReactElement<any, string | JSXElementConstructor<any>>;
-  footer?: ReactElement<any, string | JSXElementConstructor<any>>;
-  renderItem: (
-    item: any
-  ) => ReactElement<any, string | JSXElementConstructor<any>>;
+  /** 刷新 */
+  onRefresh?: () => void;
   /** 加载完成 */
   onLoadComplete?: () => void;
+  /** 内容的样式 */
+  columnsStyle?: StyleProp<ViewStyle>;
   /** 显示纵向滚动条 */
   showsVerticalScrollIndicator?: boolean;
   /** 滑动事件 */
   onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  /** 刷新 */
-  onRefresh?: () => void;
-  /** 内容的样式 */
-  columnsStyle?: StyleProp<ViewStyle>;
+  /** Header / footer */
+  header?: ReactElement<any, string | JSXElementConstructor<any>>;
+  footer?: ReactElement<any, string | JSXElementConstructor<any>>;
+  renderItem: (
+    item: ItemT
+  ) => ReactElement<any, string | JSXElementConstructor<any>>;
 }
 
-const StaggeredList: React.FC<StaggeredListProps> = (props) => {
+/**
+ * 泛型的支持
+ * 参考: https://stackoverflow.com/questions/59947787/generictype-in-react-fcpropst
+ * @param props
+ * @returns
+ */
+const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
   // 每一列的 ref
   type ListHandlers = React.ElementRef<typeof List>;
   const views = Array.from({ length: props.columns }, (_, i) =>
@@ -56,7 +62,7 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
 
   /** 手势响应 */
   let responder: PanResponderInstance = PanResponder.create({});
-  const [effects, setEffects] = useState<Effects>({
+  const [effects, setEffects] = useState<Effects<ItemT>>({
     index: 0,
     minIndex: 0,
     datas: [],

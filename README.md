@@ -4,6 +4,33 @@
 
 之前看了 `GitHub` 上面几个瀑布流组件的库，基本都是踏 🐴 瞎 🐔 儿扯，还得自己手动传 `View` 的高度。
 
+## 这款瀑布流组件的特色
+
+### 智能填充
+
+- `ScrollView` → `VirtualizedList`。
+- 经过这么多期不断优化迭代，可见部分采用 `从左到右` 依次填充，不可见部分采用 `高度最小列` 优先填充。
+
+### 泛型支持
+
+像 `FlatList` 一样 `renderItem`，然后支持自己的 `ItemT`。
+
+![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListT0228.jpg)
+
+### 扩展性强
+
+- 支持自定义列数 `columns`。
+
+- 支持下拉刷新 `onRefresh()`。
+
+- 支持自定义 `Header` 和 `Footer`。
+
+- 支持自定义列表的 `Container` 样式。
+
+- 支持滑动监听 `onScroll(NativeSyntheticEvent<NativeScrollEvent>) => void`。
+
+- 支持分页加载，加载完了一页回调 `onCompleted: () => void`，接着来下一页的数据也是 `OJBK` 的。
+
 **觉得有用，路过的各位老铁们右上角的小星星走起来，谢谢。**
 
 ![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListDemo0215.gif)
@@ -64,8 +91,6 @@ npm install react-native-staggered-list
 
 - 另外一种就是等上一个渲染完了，然后回调完了高度，找出这几列高度最低的一个，然后渲染下一个。
 
-~~ 目前这个组件实现的原理是第二种情况。~~
-
 ```javascript
 // views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
 ```
@@ -105,6 +130,7 @@ const Item: React.FC<ItemProps> = (props) => {
 ~~综上所述，从 `1.4.0` 版本开始，准备使用第一种思路，直接从左到右挨个排列。~~
 
 目前的思路是:
+
 为了节省时间，优化体验，刚开始肉眼可见的区域是直接从左到右依次填充。给了一个高度容错的范围，默认 `[0, 2*props.columns]`。在这个范围里面的数据，渲染的时候，延时 `1000ms`，这样儿确保了前面的数据渲染完了，拿到的高度能更真实一些。也就是说最后这几个 `Item` 是优化布局，纠错用的。
 
 ## 还需要完善的工作
@@ -179,3 +205,5 @@ const Item: React.FC<ItemProps> = (props) => {
   - 🐞 还是防抖的逻辑，不要控制 `refreshing`，控制 `r` → `setR(Math.random())`。
 - Version 1.7.3
   - 🛠 更新 README.md。
+- Version 1.8.0
+  - 🆕 新增泛型 `ItemT` 的支持。
