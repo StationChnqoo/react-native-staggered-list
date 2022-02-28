@@ -4,20 +4,20 @@
 
 之前看了 `GitHub` 上面几个瀑布流组件的库，基本都是踏 🐴 瞎 🐔 儿扯，还得自己手动传 `View` 的高度。
 
-## 这款瀑布流组件的特色
+## 😍 这款瀑布流组件的特色
 
-### 智能填充
+### 🌽 智能排列
 
 - `ScrollView` → `VirtualizedList`。
 - 经过这么多期不断优化迭代，可见部分采用 `从左到右` 依次填充，不可见部分采用 `高度最小列` 优先填充。
 
-### 泛型支持
+### 🍉 泛型支持
 
 像 `FlatList` 一样 `renderItem`，然后支持自己的 `ItemT`。
 
 ![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListT0228.jpg)
 
-### 扩展性强
+### 🍇 扩展性强
 
 - 支持自定义列数 `columns`。
 
@@ -35,24 +35,24 @@
 
 ![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListDemo0215.gif)
 
-## 命名规范
+## 😌 命名规范
 
 整体的设计思想模仿的是 `FlatList`，提供以下内容的自定义。
 
-| Name                         | Type                                                | Description                              |
-| :--------------------------- | :-------------------------------------------------- | :--------------------------------------- |
-| columns                      | `number`                                            | Size of columns.                         |
-| datas                        | `any []`                                            | Data source                              |
-| renderItem                   | `(item: any) => React.Node`                         | Render yours custom view.                |
-| onLoadComplete               | `() => void`                                        | Datas load completed.                    |
-| header                       | `React.Node`                                        | Header view.                             |
-| footer                       | `React.Node`                                        | Footer view.                             |
-| showsVerticalScrollIndicator | `boolean`                                           | Is showing showsVerticalScrollIndicator. |
-| onScroll                     | `(NativeSyntheticEvent<NativeScrollEvent>) => void` | ScrollView native event.                 |
-| onRefresh                    | `() => void`                                        | Refreshed event.                         |
-| columnsStyle                 | `StyleProp<ViewStyle>`                              | Columns style                            |
+| Name                         | Type                                                | Description                                                                     |
+| :--------------------------- | :-------------------------------------------------- | :------------------------------------------------------------------------------ |
+| columns                      | `number`                                            | 列数。                                                                          |
+| datas                        | `ItemT []`                                          | 数据源 ( 支持泛型 ItemT )。                                                     |
+| renderItem                   | `(item: ItemT) => React.Node`                       | 跟 `FlatList` 一样，渲染什么您说了算。                                          |
+| onLoadComplete               | `() => void`                                        | 数据全部渲染完成时候的回调，比如 `分页` 这种应用场景。                          |
+| header                       | `React.Node`                                        | 瀑布流的头部。                                                                  |
+| footer                       | `React.Node`                                        | 瀑布流的尾部。                                                                  |
+| showsVerticalScrollIndicator | `boolean`                                           | 是否显示 `纵向` 滚动条。                                                        |
+| onScroll                     | `(NativeSyntheticEvent<NativeScrollEvent>) => void` | 滑动事件，比如 `吸顶` 要判断滑动距离这种场景。                                  |
+| onRefresh                    | `() => void`                                        | 下拉刷新时候的回调。                                                            |
+| columnsStyle                 | `StyleProp<ViewStyle>`                              | 瀑布流的 Container 的样式，可以控制 `内边距` 以及 `列表` 和 `Header` 的距离等。 |
 
-## How to use
+## 🤔 如何使用
 
 ```bash
 npm install react-native-staggered-list
@@ -83,7 +83,7 @@ npm install react-native-staggered-list
 />
 ```
 
-## 实现原理
+## 😳 实现原理
 
 两种思路：
 
@@ -133,7 +133,7 @@ const Item: React.FC<ItemProps> = (props) => {
 
 为了节省时间，优化体验，刚开始肉眼可见的区域是直接从左到右依次填充。给了一个高度容错的范围，默认 `[0, 2*props.columns]`。在这个范围里面的数据，渲染的时候，延时 `1000ms`，这样儿确保了前面的数据渲染完了，拿到的高度能更真实一些。也就是说最后这几个 `Item` 是优化布局，纠错用的。
 
-## 还需要完善的工作
+## 😡 还需要完善的工作
 
 因为目前项目着急上线，目前暂时能想到的还有以下的内容要做。
 
@@ -148,9 +148,9 @@ const Item: React.FC<ItemProps> = (props) => {
 - ~~打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。~~
   - 这个目前不是问题了，因为现在基本绝大多数项目都支持 `ts`。
 
-## 版本更新记录
+## 🙄 版本更新记录
 
-### Version 1.0.0
+### 🍀 Version 1.0.0
 
 🍀 Published react-native-staggered-list，支持分页加载 & Header & Footer 等功能。
 
@@ -207,3 +207,5 @@ const Item: React.FC<ItemProps> = (props) => {
   - 🛠 更新 README.md。
 - Version 1.8.0
   - 🆕 新增泛型 `ItemT` 的支持。
+- Version 1.8.1
+  - 🛠 修改 README.md。
