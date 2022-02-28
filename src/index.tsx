@@ -1,3 +1,4 @@
+import { useDebounceEffect } from "ahooks";
 import React, {
   JSXElementConstructor,
   ReactElement,
@@ -12,7 +13,9 @@ import {
   View,
   ViewStyle,
   VirtualizedList,
-  RefreshControl
+  RefreshControl,
+  PanResponder,
+  PanResponderInstance,
 } from "react-native";
 import List from "./List";
 
@@ -49,7 +52,8 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   const views = Array.from({ length: props.columns }, (_, i) =>
     React.useRef<ListHandlers>()
   );
-
+  /** 手势响应 */
+  let responder: PanResponderInstance = PanResponder.create({});
   const [effects, setEffects] = useState<Effects>({
     index: 0,
     minIndex: 0,
@@ -67,17 +71,23 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     return index;
   };
 
-  useEffect(() => {
-    // views[findMinColumn()].current.push(datas[index]);
-    // console.log(`Datas.length: ${props.datas.length}`);
-    /** 每次来一页新的数据，找一下当前的高度最小的列 */
-    setEffects({
-      index: effects.index,
-      datas: props.datas,
-      minIndex: findMinColumn(),
-    });
-    return () => {};
-  }, [props.datas]);
+  /**
+   * 每次来一页新的数据
+   * 1. 找一下当前的高度最小的列
+   * 2. 防抖，因为这个时候还有一部分数据是在渲染中，所以可以防止用户操作起来不断刷新
+   */
+  useDebounceEffect(
+    () => {
+      setEffects({
+        index: effects.index,
+        datas: props.datas,
+        minIndex: findMinColumn(),
+      });
+      return () => {};
+    },
+    [props.datas],
+    { leading: true, trailing: false, wait: 5000 }
+  );
 
   useEffect(() => {
     if (effects.datas.length > 0) {
@@ -86,24 +96,28 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
       } else {
         let item = effects?.datas[effects.index] ?? null;
         item && views[effects.minIndex].current?.push(item, effects.index + 1);
-        setTimeout(() => {
-          setEffects({
-            index: effects.index + 1,
-            datas: effects.datas,
-            /** 默认按照从左到右依次填充，然后等最后剩了 props.columns 个数的时候，由小到大填充 */
-            minIndex:
-              effects.datas.length - effects.index > props.columns
-                ? (effects.minIndex + 1) % props.columns
-                : findMinColumn(),
-          });
-        }, 100);
+        setTimeout(
+          () => {
+            setEffects({
+              index: effects.index + 1,
+              datas: effects.datas,
+              /** 这部分用户不可见的时候，可以容错处理。 */
+              minIndex:
+                effects.datas.length - effects.index >= 2 * props.columns
+                  ? (effects.minIndex + 1) % props.columns
+                  : findMinColumn(),
+            });
+          },
+          effects.datas.length - effects.index > props.columns ? 100 : 1000
+        );
       }
     }
     return () => {};
   }, [effects]);
-
+  
   return (
     <VirtualizedList
+      {...responder.panHandlers}
       data={[""]}
       style={{ flex: 1 }}
       getItemCount={() => 1}
