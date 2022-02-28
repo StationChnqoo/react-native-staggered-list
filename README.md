@@ -147,3 +147,5 @@ const Item: React.FC<ItemProps> = (props) => {
 
 - Version 1.7.1
   - 🐞 修改了一下防抖的时机，改为 `onRefresh()` 回调前就进行处理。
+- Version 1.7.2
+  - 🐞 还是防抖的逻辑，不要控制 `refreshing`，控制 `r` → `setR(Math.random())`。

@@ -52,6 +52,8 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
   const views = Array.from({ length: props.columns }, (_, i) =>
     React.useRef<ListHandlers>()
   );
+  const [r, setR] = useState<number>(0);
+
   /** 手势响应 */
   let responder: PanResponderInstance = PanResponder.create({});
   const [effects, setEffects] = useState<Effects>({
@@ -59,8 +61,6 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
     minIndex: 0,
     datas: [],
   });
-
-  const [refreshing, setRefreshing] = useState(false);
 
   const findMinColumn = () => {
     let columnsHeights = Array.from({ length: props.columns }, (_, i) =>
@@ -78,28 +78,22 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
       datas: props.datas,
       minIndex: findMinColumn(),
     });
-    setRefreshing(false);
     return () => {};
   }, [props.datas]);
 
   /** 从 Refresh 就杜绝反复下拉刷新，不进行回调 */
   useDebounceEffect(
     () => {
-      if (refreshing) {
+      if (r > 0) {
         props?.onRefresh && props.onRefresh();
         setEffects({ index: 0, datas: [], minIndex: 0 });
         Array.from({ length: props.columns }, (_, i) =>
           views[i].current.clear()
         );
-        setEffects({
-          index: effects.index,
-          datas: props.datas,
-          minIndex: findMinColumn(),
-        });
       }
       return () => {};
     },
-    [refreshing],
+    [r],
     { leading: true, trailing: false, wait: 5000 }
   );
 
@@ -160,9 +154,9 @@ const StaggeredList: React.FC<StaggeredListProps> = (props) => {
       )}
       refreshControl={
         <RefreshControl
-          refreshing={refreshing}
+          refreshing={false}
           onRefresh={() => {
-            setRefreshing(true);
+            setR(Math.random());
           }}
         />
       }
