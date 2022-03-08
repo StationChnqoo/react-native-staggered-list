@@ -5,10 +5,11 @@ import React, {
   useState,
 } from "react";
 import { VirtualizedList } from "react-native";
-import Item from "react-native-staggered-list/src/Item";
+import Item from "./Item";
 
-interface ListProps<ItemT> {
+interface ListProps {
   id: number | string;
+  onEndReached: () => void;
   renderItem: (
     item: any
   ) => ReactElement<any, string | JSXElementConstructor<any>>;
@@ -56,6 +57,9 @@ const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
       listKey={`Columns: ${props.id}`}
       getItemCount={() => datas.length}
       getItem={(datas, index) => datas[index]}
+      onEndReached={() => {
+        props.onEndReached();
+      }}
       keyExtractor={(item, index) => `Item: ${indexes[index]}`}
       renderItem={(item) => (
         <Item

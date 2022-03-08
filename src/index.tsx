@@ -68,6 +68,15 @@ const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
     datas: [],
   });
 
+  /** 每一列是否滑动到最底部 */
+  const [reachedEnds, setReachedEnds] = useState(
+    Array.from({ length: props.columns }, (_, i) => false)
+  );
+
+  /**
+   * 寻找当前高度最小的列
+   * @returns
+   */
   const findMinColumn = () => {
     let columnsHeights = Array.from({ length: props.columns }, (_, i) =>
       parseInt(`${views[i].current?.columnHeight()}`)
@@ -77,8 +86,17 @@ const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
     return index;
   };
 
-  /** 每次来一页新的数据，找一下当前的高度最小的列。 */
+  /** 所有的 Items 是否渲染完成 */
+  const [loadEnd, setLoadEnd] = useState(false);
+
+  /**
+   * 每次来一页新的数据:
+   * 1. 数据渲染完成的状态重置为 false
+   * 2. 每一列是否滑动到底部的状态重置为 false
+   */
   useEffect(() => {
+    setLoadEnd(false);
+    setReachedEnds(Array.from({ length: props.columns }, (_, i) => false));
     setEffects({
       index: effects.index,
       datas: props.datas,
@@ -106,7 +124,8 @@ const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
   useEffect(() => {
     if (effects.datas.length > 0) {
       if (effects.index == effects.datas.length) {
-        props?.onLoadComplete && props.onLoadComplete();
+        // 加载完成
+        setLoadEnd(true);
       } else {
         let item = effects?.datas[effects.index] ?? null;
         item && views[effects.minIndex].current?.push(item, effects.index + 1);
@@ -128,6 +147,14 @@ const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
     }
     return () => {};
   }, [effects]);
+  
+  /** 所有的数据都渲染完了并且也滑动到底部了，这个时候再去告知加载完成，可以下一页了。 */
+  useEffect(() => {
+    if (reachedEnds.every((it) => it == true) && loadEnd) {
+      props?.onLoadComplete && props?.onLoadComplete();
+    }
+    return () => {};
+  }, [reachedEnds, loadEnd]);
 
   return (
     <VirtualizedList
@@ -152,6 +179,12 @@ const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
             <List
               key={i}
               id={i}
+              onEndReached={() => {
+                setReachedEnds((e) => {
+                  e[i] = true;
+                  return [...e];
+                });
+              }}
               renderItem={(item) => props.renderItem(item)}
               ref={(ref) => (views[i].current = ref)}
             />
