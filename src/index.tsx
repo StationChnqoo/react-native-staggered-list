@@ -1,10 +1,4 @@
-import { useDebounceEffect } from "ahooks";
-import React, {
-  JSXElementConstructor,
-  ReactElement,
-  useEffect,
-  useState,
-} from "react";
+import React, { JSXElementConstructor, ReactElement } from "react";
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -14,35 +8,34 @@ import {
   ViewStyle,
   VirtualizedList,
   RefreshControl,
-  PanResponder,
-  PanResponderInstance,
 } from "react-native";
-import List from "./List";
-
-type Effects<ItemT> = {
-  index: number;
-  minIndex: number;
-  datas: ItemT[];
-};
+import * as Animatable from "react-native-animatable";
 
 interface StaggeredListProps<ItemT> {
-  datas: ItemT[];
-  columns: number;
-  /** 刷新 */
-  onRefresh?: () => void;
-  /** 加载完成 */
-  onLoadComplete?: () => void;
-  /** 内容的样式 */
-  columnsStyle?: StyleProp<ViewStyle>;
-  /** 显示纵向滚动条 */
-  showsVerticalScrollIndicator?: boolean;
-  /** 滑动事件 */
-  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  /** Header / footer */
-  header?: ReactElement<any, string | JSXElementConstructor<any>>;
-  footer?: ReactElement<any, string | JSXElementConstructor<any>>;
+  data: ItemT[];
+  numColumns?: number | undefined;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  onEndReached?:
+    | ((info: { distanceFromEnd: number }) => void)
+    | null
+    | undefined;
+  onEndReachedThreshold?: number | null | undefined;
+  onRefresh?: (() => void) | null | undefined;
+  onScroll?:
+    | ((event: NativeSyntheticEvent<NativeScrollEvent>) => void)
+    | undefined;
+  refreshing?: boolean | null | undefined;
+  removeClippedSubviews?: boolean | undefined;
+  scrollEventThrottle?: number | undefined;
+  showsVerticalScrollIndicator?: boolean | undefined;
+  style?: StyleProp<ViewStyle>;
+  ListEmptyComponent?: ReactElement<any, string | JSXElementConstructor<any>>;
+  ListHeaderComponent?: ReactElement<any, string | JSXElementConstructor<any>>;
+  ListFooterComponent?: ReactElement<any, string | JSXElementConstructor<any>>;
   renderItem: (
-    item: ItemT
+    item: ItemT,
+    column: number,
+    i: number
   ) => ReactElement<any, string | JSXElementConstructor<any>>;
 }
 
@@ -53,152 +46,71 @@ interface StaggeredListProps<ItemT> {
  * @returns
  */
 const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
-  // 每一列的 ref
-  type ListHandlers = React.ElementRef<typeof List>;
-  const views = Array.from({ length: props.columns }, (_, i) =>
-    React.useRef<ListHandlers>()
-  );
-  const [r, setR] = useState<number>(0);
+  const numColumns = props?.numColumns ?? 2;
+  const showsVerticalScrollIndicator =
+    props?.showsVerticalScrollIndicator ?? false;
+  const removeClippedSubviews = props?.removeClippedSubviews ?? true;
+  const onEndReachedThreshold = props?.onEndReachedThreshold ?? 0.2;
+  const scrollEventThrottle = props?.scrollEventThrottle ?? 100;
 
-  /** 手势响应 */
-  let responder: PanResponderInstance = PanResponder.create({});
-  const [effects, setEffects] = useState<Effects<ItemT>>({
-    index: 0,
-    minIndex: 0,
-    datas: [],
-  });
-
-  /** 每一列是否滑动到最底部 */
-  const [reachedEnds, setReachedEnds] = useState(
-    Array.from({ length: props.columns }, (_, i) => false)
-  );
-
-  /**
-   * 寻找当前高度最小的列
-   * @returns
-   */
-  const findMinColumn = () => {
-    let columnsHeights = Array.from({ length: props.columns }, (_, i) =>
-      parseInt(`${views[i].current?.columnHeight()}`)
-    );
-    let min = Math.min(...columnsHeights);
-    let index = columnsHeights.findIndex((it) => it == min);
-    return index;
+  const defaultProps = {
+    showsVerticalScrollIndicator,
+    removeClippedSubviews,
+    onEndReachedThreshold,
+    scrollEventThrottle,
   };
-
-  /** 所有的 Items 是否渲染完成 */
-  const [loadEnd, setLoadEnd] = useState(false);
-
-  /**
-   * 每次来一页新的数据:
-   * 1. 数据渲染完成的状态重置为 false
-   * 2. 每一列是否滑动到底部的状态重置为 false
-   */
-  useEffect(() => {
-    setLoadEnd(false);
-    setReachedEnds(Array.from({ length: props.columns }, (_, i) => false));
-    setEffects({
-      index: effects.index,
-      datas: props.datas,
-      minIndex: findMinColumn(),
-    });
-    return () => {};
-  }, [props.datas]);
-
-  /** 从 Refresh 就杜绝反复下拉刷新，不进行回调 */
-  useDebounceEffect(
-    () => {
-      if (r > 0) {
-        props?.onRefresh && props.onRefresh();
-        setEffects({ index: 0, datas: [], minIndex: 0 });
-        Array.from({ length: props.columns }, (_, i) =>
-          views[i].current.clear()
-        );
-      }
-      return () => {};
-    },
-    [r],
-    { leading: true, trailing: false, wait: 5000 }
-  );
-
-  useEffect(() => {
-    if (effects.datas.length > 0) {
-      if (effects.index == effects.datas.length) {
-        // 加载完成
-        setLoadEnd(true);
-      } else {
-        let item = effects?.datas[effects.index] ?? null;
-        item && views[effects.minIndex].current?.push(item, effects.index + 1);
-        setTimeout(
-          () => {
-            setEffects({
-              index: effects.index + 1,
-              datas: effects.datas,
-              /** 这部分用户不可见的时候，可以容错处理。 */
-              minIndex:
-                effects.datas.length - effects.index >= 2 * props.columns
-                  ? (effects.minIndex + 1) % props.columns
-                  : findMinColumn(),
-            });
-          },
-          effects.datas.length - effects.index > props.columns ? 100 : 1000
-        );
-      }
-    }
-    return () => {};
-  }, [effects]);
-  
-  /** 所有的数据都渲染完了并且也滑动到底部了，这个时候再去告知加载完成，可以下一页了。 */
-  useEffect(() => {
-    if (reachedEnds.every((it) => it == true) && loadEnd) {
-      props?.onLoadComplete && props?.onLoadComplete();
-    }
-    return () => {};
-  }, [reachedEnds, loadEnd]);
-
   return (
     <VirtualizedList
-      {...responder.panHandlers}
+      {...defaultProps}
+      onScroll={props?.onScroll ?? props.onScroll}
+      ListHeaderComponent={props?.ListHeaderComponent ?? null}
+      ListEmptyComponent={props?.ListEmptyComponent ?? null}
+      ListFooterComponent={props?.ListFooterComponent ?? null}
       data={[""]}
-      style={{ flex: 1 }}
-      getItemCount={() => 1}
-      scrollEventThrottle={100}
-      getItem={(datas, index) => datas[index]}
-      ListHeaderComponent={props?.header ?? null}
-      ListFooterComponent={props?.footer ?? null}
-      onScroll={(e) => {
-        props.onScroll && props?.onScroll(e);
-      }}
-      showsVerticalScrollIndicator={
-        props?.showsVerticalScrollIndicator ?? false
+      style={[{ flex: 1 }, props?.style ?? {}]}
+      onEndReached={props?.onEndReached && props.onEndReached}
+      refreshControl={
+        <RefreshControl
+          refreshing={props.refreshing ?? false}
+          onRefresh={props?.onRefresh && props.onRefresh}
+        />
       }
-      keyExtractor={(item, index) => `react-native-staggered-list: ${index}`}
       renderItem={(info) => (
-        <View style={[styles.viewColumns, props?.columnsStyle ?? null]}>
-          {Array.from({ length: props.columns }, (_, i) => (
-            <List
-              key={i}
-              id={i}
-              onEndReached={() => {
-                setReachedEnds((e) => {
-                  e[i] = true;
-                  return [...e];
-                });
-              }}
-              renderItem={(item) => props.renderItem(item)}
-              ref={(ref) => (views[i].current = ref)}
-            />
+        <View
+          style={[
+            { flexDirection: "row", justifyContent: "space-around" },
+            props?.contentContainerStyle ?? null,
+          ]}
+        >
+          {Array.from({ length: numColumns }, (_, i) => (
+            <View
+              style={{ width: `${100 / numColumns}%` }}
+              key={`Column ${i + 1}`}
+            >
+              {props.data.map((__, _i) => {
+                if (_i % numColumns == i) {
+                  return (
+                    <Animatable.View
+                      useNativeDriver={true}
+                      delay={_i * 100}
+                      animation={"fadeInDown"}
+                      duration={618}
+                      key={`Column ${i + 1} --> Datas[${_i}]`}
+                    >
+                      {props.renderItem(__, i, _i)}
+                    </Animatable.View>
+                  );
+                } else {
+                  return null;
+                }
+              })}
+            </View>
           ))}
         </View>
       )}
-      refreshControl={
-        <RefreshControl
-          refreshing={false}
-          onRefresh={() => {
-            setR(Math.random());
-          }}
-        />
-      }
+      keyExtractor={(item, index) => `react-native-miui`}
+      getItemCount={(data) => 1}
+      getItem={(data, index) => data[index]}
     />
   );
 };
