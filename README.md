@@ -1,14 +1,22 @@
 # react-native-staggered-list
 
-基于 `VirtualizedList` 封装的 `react-native` 可以自己测量 Item 高度的瀑布流组件。
+基于 `VirtualizedList` 封装的 `react-native` 瀑布流组件。
 
-** 从 `2.0.0` 版本以后，仓库已经迁移到 `react-native-miui` 仓库的 `Waterfall` 组件。 **
+经过无数次迭代，目前包里面有三个版本 `deprecated`、`default` 和 `withDimensions`。
 
-[新版本仓库地址:](https://github.com/ChenqiaoStation/react-native-miui)。
+这里面最开始的版本是可以自动测量高度的 `deprecated`，后来做了一半比较稳定的 `default`，而且经过线上验证了。最近这一版做的是 `withDimensions`。
+
+主要区别如下:
+
+|                | Deprecated | Default    | withDimensions |
+| :------------- | :--------- | :--------- | :------------- |
+| 环境等级       | 测试 `Dev` | 生产 `Pro` | 生产 `Pro`     |
+| 排列方式       | 最短列填充 | 从左到右   | 最短列填充     |
+| 自动计算高度   | ✅         | x          | x              |
+| 分页           | x          | ✅         | ✅             |
+| 滚动到指定位置 | x          | ✅         | ✅             |
 
 ** 新版本组件 `命名方式` 和 `参数` 与 `FlatList` 一模一样。需要动态计算高度的，请自行安装 `1.x` 的最后一个版本 `1.9.0`。**
-
-新版组件主要考虑到了 `业务场景` 和 `用户体验` 方面，只采用 `从左到右` 依次渲染。
 
 - 业务场景:
 
@@ -75,8 +83,15 @@
 npm install react-native-staggered-list
 ```
 
-```JS
-<StaggeredList
+```javascript
+import {
+  Waterfall,
+  WaterfallWithDimensions,
+} from "react-native-staggered-list";
+```
+
+```javascript
+<Waterfall
   onRefresh={() => {
     setR(Math.random());
     setPageIndex(1);
@@ -86,13 +101,11 @@ npm install react-native-staggered-list
   renderItem={(item) => <HomeItem item={item} />}
   columns={2}
   columnsStyle={{
-    justifyContent: 'space-around',
+    justifyContent: "space-around",
     paddingHorizontal: 5 * vw,
   }}
   onScroll={(e) => {
-    setTabBarOpacity(
-      Math.min(1, e.nativeEvent.contentOffset.y / imgHeight),
-    );
+    setTabBarOpacity(Math.min(1, e.nativeEvent.contentOffset.y / imgHeight));
   }}
   onLoadComplete={() => {
     setPageIndex((t) => t + 1);
@@ -104,19 +117,21 @@ npm install react-native-staggered-list
 
 两种思路：
 
-- 一种就是直接挨个 `index%column` 往里面填充，适合左右两边高度差不多相等的情况。
+### Waterafall
 
-- 另外一种就是等上一个渲染完了，然后回调完了高度，找出这几列高度最低的一个，然后渲染下一个。
+直接挨个 `index%column` 往里面填充，适合左右两边高度差不多相等的情况。
 
-```javascript
-// views[findMinColumn()].current.push(uniteEffects.datas[index.index]);
-```
+### WaterfallWithDimensions
 
-最开始的时候确实用的是第二个思路，但是后来发现一种场景好像不太合适。比如说如果封装一个自动高度的图片组件。他会使目前的 `Item` → `onLayout()` 两次。
+需要在数据源中加入 `dimensions: {width: number, height: number}`，然后根据每一列的高度，填充最低的高度。
 
-> 因为 onLayout() 只要 Item 布局变了，他就会回调。
+### Deprecated
 
-那么我就要在 `renderItem()` 里面做文章，但是 `Item` 好像拿不到 `props.children` 里面的状态，这就很麻烦。想了很多方法，感觉都不是很好。
+不推荐，有很多缺陷。
+
+- `Item` 会不断的 `onLayout()` 还会有硬件方面性能的损失，再就是就算是拿到 `renderItem` 里面的状态的话，那也是像老母鸡 🐔 下蛋 🥚 一样，一个一个的渲染，体验上也说不过去。
+
+- `Item` 的 `onLayout()` 其实并不是预期的那样，他会立即执行一次或者两次，而不是布局变化的时候进行回调。那么我就要在 `renderItem()` 里面做文章，但是 `Item` 好像拿不到 `props.children` 里面的状态，这就很麻烦。想了很多方法，感觉都不是很好。
 
 代码贴出来:
 
@@ -142,30 +157,17 @@ const Item: React.FC<ItemProps> = (props) => {
 };
 ```
 
-而且 `Item` 会不断的 `onLayout()` 还会有硬件方面性能的损失，再就是就算是拿到 `renderItem` 里面的状态的话，那也是像老母鸡 🐔 下蛋 🥚 一样，一个一个的渲染，体验上也说不过去。
+之前想了个办法，刚开始肉眼可见的区域是直接从左到右依次填充。给了一个高度容错的范围，默认 `[0, 2*props.columns]`。在这个范围里面的数据，渲染的时候，延时 `1000ms`，这样儿确保了前面的数据渲染完了，拿到的高度能更真实一些。也就是说最后这几个 `Item` 是优化布局，纠错用的。
 
-~~综上所述，从 `1.4.0` 版本开始，准备使用第一种思路，直接从左到右挨个排列。~~
+但是这样儿分页又出问题了。有可能这一页还没渲染完，这个时候如果用户下拉刷新，就会导致组件内的 `index` 出问题。
 
-目前的思路是:
+**所以这里我把 `Deprecated` 代码提供出来了，起码让各位读者了解我在封装这个组件时候的思路，但是不推荐使用。**
 
-为了节省时间，优化体验，刚开始肉眼可见的区域是直接从左到右依次填充。给了一个高度容错的范围，默认 `[0, 2*props.columns]`。在这个范围里面的数据，渲染的时候，延时 `1000ms`，这样儿确保了前面的数据渲染完了，拿到的高度能更真实一些。也就是说最后这几个 `Item` 是优化布局，纠错用的。
+## 🙄 版本记录
 
-## 😡 还需要完善的工作
+### 🚀 Version 3.0
 
-因为目前项目着急上线，目前暂时能想到的还有以下的内容要做。
-
-- ~~`ScrollView` 里面套 `VirtualizedList` 是否可行，今天下午试了一把感觉好像是不行，还是会有警告。~~
-
-  - `1.6.0` 版本采用的 `VirtualizedList` 套 `VirtualizedList`，目前暂时没有警告了。
-
-- 性能: 这个有时间接着优化，准备长期维护这个项目。
-
-  - `1.6.0` 版本采用的 `VirtualizedList` 套 `VirtualizedList`，理论上性能应该比之前好一点儿，周末回家测试下性能。
-
-- ~~打包: 目前 `tsx` 只支持 `ts` 項目，我看网上有 `tsc` 和 `webpack` 的配置，能打包输出 `/dist/` 生成 `index.d.ts` 暂时没学会。~~
-  - 这个目前不是问题了，因为现在基本绝大多数项目都支持 `ts`。
-
-## 🙄 版本更新记录
+🚀 Publish `Waterfall` & `WaterfallWithDimensions`。
 
 ### 🚀 Version 2.0.0
 

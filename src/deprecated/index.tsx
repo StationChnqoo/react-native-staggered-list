@@ -108,7 +108,7 @@ const StaggeredList = <ItemT extends {}>(props: StaggeredListProps<ItemT>) => {
           ))}
         </View>
       )}
-      keyExtractor={(item, index) => `react-native-miui`}
+      keyExtractor={(item, index) => `react-native-staggered-list`}
       getItemCount={(data) => 1}
       getItem={(data, index) => data[index]}
     />

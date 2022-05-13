@@ -74,32 +74,6 @@ const List: React.ForwardRefRenderFunction<ListHandlers, ListProps> = (
         </Item>
       )}
     />
-    // <View style={{ flex: 1 }}>
-    //   {Array.from(datas, (_, i) => (
-    //     <View style={{ position: "relative" }}>
-    //       <Item
-    //         onMeasuredHeight={(h) => {
-    //           let _sum = JSON.parse(JSON.stringify(sum));
-    //           _sum[i] = h;
-    //           setSum(_sum);
-    //         }}
-    //         key={i}
-    //       >
-    //         {props.renderItem(_)}
-    //       </Item>
-    //       {/* <Text
-    //         style={{
-    //           color: "#FF5252",
-    //           bottom: 16,
-    //           right: 16,
-    //           position: "absolute",
-    //         }}
-    //       >
-    //         {indexes[i]}
-    //       </Text> */}
-    //     </View>
-    //   ))}
-    // </View>
   );
 };
 
