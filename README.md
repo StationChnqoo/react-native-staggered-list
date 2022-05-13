@@ -16,8 +16,6 @@
 | 分页           | x          | ✅         | ✅             |
 | 滚动到指定位置 | x          | ✅         | ✅             |
 
-** 新版本组件 `命名方式` 和 `参数` 与 `FlatList` 一模一样。需要动态计算高度的，请自行安装 `1.x` 的最后一个版本 `1.9.0`。**
-
 - 业务场景:
 
   实际上数据源 `data` 都是运营的同学负责添加的，现在的 `APP` 基本上滑动不到底部，因为数据量实在很大。所以就算是几个列的高度差别很大，基本也不影响。这也是我决定最后一次改版的主要原因。
@@ -39,8 +37,6 @@
 ### 🍉 泛型支持
 
 像 `FlatList` 一样 `renderItem`，然后支持自己的 `ItemT`。
-
-![](https://net-cctv3.oss-cn-qingdao.aliyuncs.com/net.cctv3.open/StaggeredListT0228.jpg)
 
 ### 🍇 扩展性强
 
@@ -170,8 +166,6 @@ const Item: React.FC<ItemProps> = (props) => {
 🚀 Publish `Waterfall` & `WaterfallWithDimensions`。
 
 ### 🚀 Version 2.0.0
-
-** 从 `2.0.0` 版本以后，仓库已经迁移到 `react-native-miui` 仓库的 `Waterfall` 组件。 **
 
 ** 新版本组件 `命名方式` 和 `参数` 与 `FlatList` 一模一样。需要动态计算高度的，请自行安装 `1.x` 的最后一个版本 `1.9.0`。**
 
